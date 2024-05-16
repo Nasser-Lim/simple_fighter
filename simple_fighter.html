@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Simple Fighter Jet Game</title>
+<style>
+  body, html {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background-color: black;
+    position: relative;
+  }
+  #fighter {
+    position: absolute;
+    bottom: 20px;
+    width: 50px;
+    height: 50px;
+    background: url('https://i.namu.wiki/i/6PT3qTGhCBUfrGUz6BNGigKUolAZjwdm3mPJJ7UM5Dp0MxNUkV6EIZUHoGPE57hjI_-kns0NdwCRLZNTUVbLXd-NlfdvItRbjYzsmWikChvMHrkjqUn2UyMC7Qs13PSkUqIX_IqDJcI4yZLNOFv3HQ.webp') no-repeat center;
+    background-size: cover;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .enemy {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background: url('https://i.namu.wiki/i/HOwfoDRJeKfBXXSi614H7CBVcLAun4AuqLEb-HFRyYWFiSPoI76yCRAycFyNKqyOO9Z-miLp3cc7JQXe0O23ZQiyD0Qo752xf__u_Stnfi4O0JOH8VOJKUdrHXV4LyoCLlAMXTu4IrIJIDNaqFcBkQ.webp') no-repeat center;
+    background-size: cover;
+  }
+  .missile {
+    position: absolute;
+    width: 5px;
+    height: 20px;
+    background-color: red;
+  }
+</style>
+</head>
+<body>
+<div id="fighter"></div>
+<script>
+const gameArea = document.body;
+const fighter = document.getElementById('fighter');
+let fighterX = window.innerWidth / 2;
+
+document.addEventListener('keydown', handleKeyPress);
+setInterval(spawnEnemy, 2000);
+
+function handleKeyPress(event) {
+  if (event.key === "ArrowLeft") {
+    fighterX -= 10;
+    if (fighterX < 0) fighterX = 0;
+  } else if (event.key === "ArrowRight") {
+    fighterX += 10;
+    if (fighterX > window.innerWidth - 50) fighterX = window.innerWidth - 50;
+  } else if (event.key === " ") {
+    fireMissile();
+  }
+  fighter.style.left = fighterX + 'px';
+}
+
+function spawnEnemy() {
+  const enemy = document.createElement('div');
+  enemy.className = 'enemy';
+  enemy.style.left = Math.random() * (window.innerWidth - 50) + 'px';
+  enemy.style.top = '0px';
+  gameArea.appendChild(enemy);
+  moveEnemy(enemy);
+}
+
+function moveEnemy(enemy) {
+  let pos = 0;
+  const interval = setInterval(function() {
+    if (pos >= window.innerHeight) {
+      clearInterval(interval);
+      gameArea.removeChild(enemy);
+    } else {
+      pos += 5;
+      enemy.style.top = pos + 'px';
+      checkCollision(enemy, interval);
+    }
+  }, 50);
+}
+
+function fireMissile() {
+  const missile = document.createElement('div');
+  missile.className = 'missile';
+  missile.style.left = (fighterX + 22.5) + 'px'; // Center the missile over the fighter
+  missile.style.top = (window.innerHeight - 70) + 'px'; // Start near the fighter
+  gameArea.appendChild(missile);
+  moveMissile(missile);
+}
+
+function moveMissile(missile) {
+  let missilePos = parseInt(missile.style.top, 10);
+  const interval = setInterval(function() {
+    if (missilePos <= 0) {
+      clearInterval(interval);
+      gameArea.removeChild(missile);
+    } else {
+      missilePos -= 10;
+      missile.style.top = missilePos + 'px';
+      // Check if missile hits any enemy
+      document.querySelectorAll('.enemy').forEach(enemy => {
+        if (checkHit(missile, enemy)) {
+          clearInterval(interval);
+          gameArea.removeChild(missile);
+          gameArea.removeChild(enemy);
+        }
+      });
+    }
+  }, 30);
+}
+
+function checkCollision(enemy, interval) {
+  const enemyRect = enemy.getBoundingClientRect();
+  const fighterRect = fighter.getBoundingClientRect();
+  if (enemyRect.x < fighterRect.x + fighterRect.width &&
+      enemyRect.x + enemyRect.width > fighterRect.x &&
+      enemyRect.y < fighterRect.y + fighterRect.height &&
+      enemyRect.y + enemyRect.height > fighterRect.y) {
+    alert('Game Over!');
+    clearInterval(interval);
+    window.location.reload(); // Reset the game
+  }
+}
+
+function checkHit(missile, enemy) {
+  const missileRect = missile.getBoundingClientRect();
+  const enemyRect = enemy.getBoundingClientRect();
+  return missileRect.x < enemyRect.x + enemyRect.width &&
+         missileRect.x + missileRect.width > enemyRect.x &&
+         missileRect.y < enemyRect.y + enemyRect.height &&
+         missileRect.y + missileRect.height > enemyRect.y;
+}
+</script>
+</body>
+</html>
